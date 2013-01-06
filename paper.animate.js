@@ -49,7 +49,7 @@ PaperAnimate.modifiers.TranslateModifier = (function() {
 	}
 	
 	TranslateModifier.prototype.update = function(e) {
-		if (this.duration <= 0) { this.proxy.removeModifier(this); return; } // TODO: remove this from proxy.modifiers
+		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
 		var updatePercentage = e.delta / this.duration,
 			updatePoint = PaperAnimate.utils.multiplyPoint(this.point, updatePercentage);
 		this.duration -= e.delta;
@@ -71,11 +71,12 @@ PaperAnimate.utils = {
 		return PaperAnimate.utils.newPointOp(function(x,y) { return x * y; }, a, b);
 	},
 	newPointOp: function(fn, a, b) {
+		console.log(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b), fn(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b)));
 		return new paper.Point(
 			fn(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b)),
 			fn(PaperAnimate.utils.getY(a), PaperAnimate.utils.getY(b))
 		);
 	},
-	getX: function(val) { return val.x || val; },
-	getY: function(val) { return val.y || val; },
+	getX: function(val) { return val.x !== undefined ? val.x : val; },
+	getY: function(val) { return val.y !== undefined ? val.y : val; }
 };
