@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="paper.js"></script>
+		<script src="paper.animate.js"></script>
+		<script type="text/paperscript" canvas="display">
+			
+			var triangle = new Path.RegularPolygon(new Point(180, 170), 3, 100);
+			triangle.fillColor = '#e9e9ff';
+			triangle.selected = true;
+			var anim = triangle.animate(1).translate(new Point(50,50));
+			
+			function onFrame(e) { anim.update(e); }
+		</script>
+	</head>
+	<body>
+		<canvas id="display" resize></canvas>
+	</body>
+</html>
