@@ -33,6 +33,11 @@ PaperAnimate.AnimationProxy = (function() {
 		return this;
 	}
 	
+	AnimationProxy.prototype.rotate = function(angle, center, _duration) {
+		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, _duration || duration, this));
+		return this;
+	}
+	
 	return AnimationProxy;
 })();
 
@@ -52,13 +57,30 @@ PaperAnimate.modifiers.TranslateModifier = (function() {
 		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
 		var updatePercentage = e.delta / this.duration,
 			updatePoint = PaperAnimate.utils.multiplyPoint(this.point, updatePercentage);
-		this.duration -= e.delta;
 		this.proxy.item.translate(updatePoint);
 		this.point = new paper.Point(this.point.x - updatePoint.x, this.point.y - updatePoint.y);
+		this.duration -= e.delta;
 	}
 	
 	return TranslateModifier;
 	
+})();
+
+PaperAnimate.modifiers.RotateModifier = (function() {
+	function RotateModifier(_angle, _center, _duration, _proxy) {
+		this.angle = _angle/_duration;
+		this.duration = _duration;
+		this.center = _center;
+		this.proxy = _proxy;
+	}
+	
+	RotateModifier.prototype.update = function(e) {
+		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
+		this.proxy.item.rotate(this.angle*e.delta, this.center);
+		this.duration -= e.delta;
+	}
+	
+	return RotateModifier;
 })();
 
 // Utils
@@ -71,7 +93,6 @@ PaperAnimate.utils = {
 		return PaperAnimate.utils.newPointOp(function(x,y) { return x * y; }, a, b);
 	},
 	newPointOp: function(fn, a, b) {
-		console.log(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b), fn(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b)));
 		return new paper.Point(
 			fn(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b)),
 			fn(PaperAnimate.utils.getY(a), PaperAnimate.utils.getY(b))
