@@ -5,12 +5,20 @@
 		<script src="paper.animate.js"></script>
 		<script type="text/paperscript" canvas="display">
 			
-			var triangle = new Path.RegularPolygon(new Point(180, 170), 3, 100);
-			triangle.fillColor = '#e9e9ff';
-			triangle.selected = true;
-			var anim = triangle.animate(1)
-							   .translate(new Point(0,50))
-							   .rotate(60);
+			var shape = new Path.RegularPolygon(new Point(180, 170), 4, 100);
+			shape.fillColor = '#e9e9ff';
+			shape.selected = true;
+			var anim = shape.animate(1)
+							.translate(new Point(200,50))
+							.rotate(60);
+							//.shear(0.6,0.8)
+							   
+			var dupe = new Path.RegularPolygon(new Point(180, 170), 4, 100);
+			dupe.fillColor = '#e9e9ff';
+			dupe.selected = true;
+			dupe.translate(new Point(500,50));
+			dupe.rotate(60);
+			//dupe.shear(0.6,0.8);
 			
 			function onFrame(e) { anim.update(e); }
 		</script>
