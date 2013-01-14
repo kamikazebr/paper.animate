@@ -1,5 +1,5 @@
-paper.Item.prototype.animate = function(duration) {
-	return new PaperAnimate.AnimationProxy(duration, this);
+paper.Item.prototype.animate = function(duration, chain) {
+	return new PaperAnimate.AnimationProxy(duration, chain||true, this);
 };
 
 var PaperAnimate = {};
@@ -7,11 +7,12 @@ var PaperAnimate = {};
 // Animation Proxy
 
 PaperAnimate.AnimationProxy = (function() {
-	var duration;
+	var duration, retVal;
 
-	function AnimationProxy(_duration, item) {
+	function AnimationProxy(_duration, chain, item) {
 		this.item = item;
 		this.modifiers = [];
+		retVal = (chain == false) ? item : this;
 		duration = _duration || 1000;
 	}
 	
@@ -44,17 +45,17 @@ PaperAnimate.AnimationProxy = (function() {
 				}
 			}]
 		);
-		return this;
+		return retVal;
 	}
 	
 	AnimationProxy.prototype.translate = function(point, _duration) {
 		this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, _duration || duration, this));
-		return this;
+		return retVal;
 	}
 	
 	AnimationProxy.prototype.rotate = function(angle, center, _duration) {
 		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, _duration || duration, this));
-		return this;
+		return retVal;
 	}
 	
 	AnimationProxy.prototype.shear = function() {
@@ -73,7 +74,7 @@ PaperAnimate.AnimationProxy = (function() {
 				}
 			}]
 		);
-		return this;
+		return retVal;
 	}
 	
 	return AnimationProxy;
@@ -90,11 +91,14 @@ PaperAnimate.modifiers.ScaleModifier = (function() {
 		this.center = _center;
 		this.duration = _duration;
 		this.proxy = _proxy;
+		
+		var clone = _proxy.item.clone();
+		console.log(clone);
+		clone.remove();
 	}
 	
 	ScaleModifier.prototype.update = function(e) {
 		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
-		// todo
 		this.duration -= e.delta;
 	}
 	
