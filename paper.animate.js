@@ -1,3 +1,5 @@
+// paper.animate.js v0.0.1
+
 paper.Item.prototype.animate = function(duration, chain) {
 	return new PaperAnimate.AnimationProxy(duration, chain||true, this);
 };
@@ -20,14 +22,14 @@ PaperAnimate.AnimationProxy = (function() {
 		for (var i = 0; i < this.modifiers.length; i++) {
 			this.modifiers[i].update(e);
 		}
-	}
+	};
 	
 	AnimationProxy.prototype.removeModifier = function(modifier) {
 		var index = this.modifiers.indexOf(modifier);
 		if (index >= 0) {
 			this.modifiers.splice(index, 1);
 		}
-	}
+	};
 	
 	AnimationProxy.prototype.scale = function() {
 		PaperAnimate.utils.selectOverload(
@@ -46,17 +48,17 @@ PaperAnimate.AnimationProxy = (function() {
 			}]
 		);
 		return retVal;
-	}
+	};
 	
 	AnimationProxy.prototype.translate = function(point, _duration) {
 		this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, _duration || duration, this));
 		return retVal;
-	}
+	};
 	
 	AnimationProxy.prototype.rotate = function(angle, center, _duration) {
 		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, _duration || duration, this));
 		return retVal;
-	}
+	};
 	
 	AnimationProxy.prototype.shear = function() {
 		PaperAnimate.utils.selectOverload(
@@ -75,7 +77,7 @@ PaperAnimate.AnimationProxy = (function() {
 			}]
 		);
 		return retVal;
-	}
+	};
 	
 	return AnimationProxy;
 })();
@@ -100,7 +102,7 @@ PaperAnimate.modifiers.ScaleModifier = (function() {
 	ScaleModifier.prototype.update = function(e) {
 		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
 		this.duration -= e.delta;
-	}
+	};
 	
 	return ScaleModifier;
 })();
@@ -120,7 +122,7 @@ PaperAnimate.modifiers.TranslateModifier = (function() {
 		this.proxy.item.translate(updatePoint);
 		this.point = new paper.Point(this.point.x - updatePoint.x, this.point.y - updatePoint.y);
 		this.duration -= e.delta;
-	}
+	};
 	
 	return TranslateModifier;
 	
@@ -138,7 +140,7 @@ PaperAnimate.modifiers.RotateModifier = (function() {
 		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
 		this.proxy.item.rotate(this.angle*e.delta, this.center);
 		this.duration -= e.delta;
-	}
+	};
 	
 	return RotateModifier;
 })();
@@ -165,7 +167,7 @@ PaperAnimate.modifiers.ShearModifier = (function() {
 			this.proxy.item.shear(this.hor * e.delta, this.ver * e.delta, this.center);
 		}
 		this.duration -= e.delta;
-	}
+	};
 	
 	return ShearModifier;
 })();
