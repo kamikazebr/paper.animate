@@ -1,213 +1,193 @@
-// paper.animate.js v0.1.0
+// paper.animate.js v0.1.1
 
-paper.Item.prototype.animate = function(duration, chain) {
-	return new PaperAnimate.AnimationProxy(duration, chain||true, this);
+paper.Item.prototype.animate = function (duration, chain) {
+    return new PaperAnimate.AnimationProxy(duration, chain || true, this);
 };
 
 var PaperAnimate = {};
 
 // Animation Proxy
 
-PaperAnimate.AnimationProxy = (function() {
-	var duration, retVal;
+PaperAnimate.AnimationProxy = (function () {
+    var retVal;
 
-	function AnimationProxy(_duration, chain, item) {
-		this.item = item;
-		this.modifiers = [];
-		retVal = (chain == false) ? item : this;
-		duration = _duration || 1000;
-	}
-	
-	AnimationProxy.prototype.update = function(e) {
-		for (var i = 0; i < this.modifiers.length; i++) {
-			this.modifiers[i].update(e);
-		}
-	};
-	
-	AnimationProxy.prototype.removeModifier = function(modifier) {
-		var index = this.modifiers.indexOf(modifier);
-		if (index >= 0) {
-			this.modifiers.splice(index, 1);
-		}
-	};
-	
-	AnimationProxy.prototype.scale = function() {
-		PaperAnimate.utils.selectOverload(
-			this, arguments,
-			[{
-				params: ["Number","Point"],
-				fn: function(scale, center) {
-					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(scale, scale, center, duration, this));
-				}
-			},
-			{
-				params: ["Number","Number","Point"],
-				fn: function(hor, ver, center) {
-					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(hor, ver, center, duration, this));
-				}
-			}]
-		);
-		return retVal;
-	};
-	
-	AnimationProxy.prototype.translate = function(point) {
-		this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, duration, this));
-		return retVal;
-	};
-	
-	AnimationProxy.prototype.rotate = function(angle, center) {
-		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, duration, this));
-		return retVal;
-	};
-	
-	AnimationProxy.prototype.shear = function() {
-		PaperAnimate.utils.selectOverload(
-			this, arguments,
-			[{
-				params: ["Point","Point"],
-				fn: function(point, center) {
-					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({point:point}, center, duration, this));
-				}
-			},
-			{
-				params: ["Number","Number","Point"],
-				fn: function(hor, ver, center) {
-					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({hor:hor,ver:ver}, center, duration, this));
-				}
-			}]
-		);
-		return retVal;
-	};
-	
-	return AnimationProxy;
+    function AnimationProxy(_duration, chain, item) {
+        this.item = item;
+        this.modifiers = [];
+        retVal = (chain === false) ? item : this;
+        this.duration = _duration || 1000;
+    }
+
+    AnimationProxy.prototype.update = function (e) {
+        if (this.duration <= 0) {
+            this.modifiers.length = 0;
+            delete this.targetShape;
+            return;
+        }
+        for (var i = 0; i < this.modifiers.length; i++) {
+            this.modifiers[i].update(e);
+        }
+        if (this.targetShape !== undefined) {
+            for (var j = 0; j < this.item.segments.length; j++) {
+                this.item.segments[j] = PaperAnimate.utils.interpolateSegment(0, this.duration, this.item.segments[j], this.targetShape.segments[j], e.delta);
+            }
+        }
+        this.duration -= e.delta;
+    };
+
+    AnimationProxy.prototype.removeModifier = function (modifier) {
+        var index = this.modifiers.indexOf(modifier);
+        if (index >= 0) {
+            this.modifiers.splice(index, 1);
+        }
+    };
+
+    AnimationProxy.prototype.initTargetShape = function () {
+        this.targetShape = this.item.clone();
+        this.targetShape.fullySelected = false;
+        this.targetShape.visible = false;
+    }
+
+    AnimationProxy.prototype.scale = function () {
+        if (this.targetShape === undefined) { this.initTargetShape(); }
+        this.targetShape.scale.apply(this.targetShape, arguments);
+        return retVal;
+    };
+
+    AnimationProxy.prototype.translate = function (point) {
+        this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, this));
+        return retVal;
+    };
+
+    AnimationProxy.prototype.rotate = function (angle, center) {
+        this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, this));
+        return retVal;
+    };
+
+    AnimationProxy.prototype.shear = function (hor, ver, center) {
+        if (this.targetShape === undefined) { this.initTargetShape(); }
+        this.targetShape.shear(hor, ver, center);
+        return retVal;
+    };
+
+    AnimationProxy.prototype.transform = function (matrix, flags) {
+        if (this.targetShape === undefined) { this.initTargetShape(); }
+        this.targetShape.transform(matrix, flags);
+        return retVal;
+    };
+
+    AnimationProxy.prototype.fitBounds = function (rectangle, fill) {
+        if (this.targetShape === undefined) { this.initTargetShape(); }
+        this.targetShape.fitBounds(rectangle, fill);
+        return retVal;
+    };
+
+    AnimationProxy.prototype.replaceShape = function (shape) {
+        if (shape.segments.length === this.item.segments.length) return;
+        this.targetShape = newShape.clone();
+        newShape.remove();
+        return retVal;
+    };
+
+    return AnimationProxy;
 })();
 
 // Modifiers
 
 PaperAnimate.modifiers = {};
 
-PaperAnimate.modifiers.ScaleModifier = (function() {
-	function ScaleModifier(_hor, _ver, _center, _duration, _proxy) {
-		this.hor = _hor;
-		this.ver = _ver;
-		this.center = _center;
-		this.duration = _duration;
-		this.proxy = _proxy;
-		
-		var clone = _proxy.item.clone();
-		console.log(clone);
-		clone.remove();
-	}
-	
-	ScaleModifier.prototype.update = function(e) {
-		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
-		this.duration -= e.delta;
-	};
-	
-	return ScaleModifier;
+PaperAnimate.modifiers.TranslateModifier = (function () {
+
+    function TranslateModifier(_point, _proxy) {
+        this.point = _point;
+        this.proxy = _proxy;
+    }
+
+    TranslateModifier.prototype.update = function (e) {
+        var updatePoint = PaperAnimate.utils.multiplyPoint(this.point, e.delta / this.proxy.duration);
+        this.proxy.item.translate(updatePoint);
+        if (this.proxy.targetShape !== undefined) {
+            this.proxy.targetShape.translate(updatePoint);
+        }
+        this.point.x = this.point.x - updatePoint.x;
+        this.point.y = this.point.y - updatePoint.y;
+    };
+
+    return TranslateModifier;
+
 })();
 
+PaperAnimate.modifiers.RotateModifier = (function () {
+    function RotateModifier(_angle, _center, _proxy) {
+        this.angle = _angle / _proxy.duration;
+        this.center = _center;
+        this.proxy = _proxy;
+    }
 
-PaperAnimate.modifiers.TranslateModifier = (function() {
-		
-	function TranslateModifier(_point, _duration, _proxy) {
-		this.point = _point;
-		this.duration = _duration;
-		this.proxy = _proxy;
-	}
-	
-	TranslateModifier.prototype.update = function(e) {
-		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
-		var updatePoint = PaperAnimate.utils.multiplyPoint(this.point, e.delta / this.duration);
-		this.proxy.item.translate(updatePoint);
-		this.point = new paper.Point(this.point.x - updatePoint.x, this.point.y - updatePoint.y);
-		this.duration -= e.delta;
-	};
-	
-	return TranslateModifier;
-	
-})();
+    RotateModifier.prototype.update = function (e) {
+        this.proxy.item.rotate(this.angle * e.delta, this.center);
+        if (this.proxy.targetShape !== undefined) {
+            this.proxy.targetShape.rotate(this.angle * e.delta, this.center);
+        }
+    };
 
-PaperAnimate.modifiers.RotateModifier = (function() {
-	function RotateModifier(_angle, _center, _duration, _proxy) {
-		this.angle = _angle/_duration;
-		this.duration = _duration;
-		this.center = _center;
-		this.proxy = _proxy;
-	}
-	
-	RotateModifier.prototype.update = function(e) {
-		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
-		this.proxy.item.rotate(this.angle*e.delta, this.center);
-		this.duration -= e.delta;
-	};
-	
-	return RotateModifier;
-})();
-
-PaperAnimate.modifiers.ShearModifier = (function() {
-	function ShearModifier(_options, _center, _duration, _proxy) {
-		this.center = _center;
-		this.duration = _duration;
-		this.proxy = _proxy;
-		
-		if (this.point !== undefined) {
-			this.point = PaperAnimate.utils.dividePoint(_options.point, _duration);
-		} else {
-			this.hor = _options.hor / _duration;
-			this.ver = _options.ver / _duration;
-		}
-	}
-	
-	ShearModifier.prototype.update = function(e) {
-		if (this.duration <= 0) { this.proxy.removeModifier(this); return; }
-		if (this.point !== undefined) {
-			this.proxy.item.shear(PaperAnimate.utils.multiplyPoint(this.point, e.delta), this.center);
-		} else {
-			this.proxy.item.shear(this.hor * e.delta, this.ver * e.delta, this.center);
-		}
-		this.duration -= e.delta;
-	};
-	
-	return ShearModifier;
+    return RotateModifier;
 })();
 
 // Utils
 
-PaperAnimate.utils = (function() {
-	return {
-		subtractPoint: function(a, b) {
-			return this.newPointOp(function(x,y) { return x - y; }, a, b);
-		},
-		multiplyPoint: function(a, b) {
-			return this.newPointOp(function(x,y) { return x * y; }, a, b);
-		},
-		newPointOp: function(fn, a, b) {
-			return new paper.Point(
-				fn(this.getX(a), this.getX(b)),
-				fn(this.getY(a), this.getY(b))
-			);
-		},
-		getX: function(val) { return this.get(val, "x"); },
-		getY: function(val) { return this.get(val, "y"); },
-		get: function(val, prop) { return val[prop] !== undefined ? val[prop] : val; },
-		selectOverload: function(that, args, overloads) {
-			var types = {
-				Number: function(val) { return !isNaN(parseFloat(val)) && isFinite(val); },
-				Point: function(val) { return val.x !== undefined && val.y !== undefined; }
-			};
-			for (var o = 0; o < overloads.length; o++) {
-				var overload = overloads[o],
-					matches = true;
-				if (args.length > overloads[o].params.length) continue;
-				for (var a = 0; a < args.length; a++) {
-					if (!types[overload.params[a]](args[a])) {
-						matches = false;
-						break;
-					};
-				}
-				if (matches) { return overload.fn.apply(that, args); }
-			}
-		}
-	}
-})();;
+PaperAnimate.utils = (function () {
+    return {
+        multiplyPoint: function (a, b) {
+            return this.newPointOp(function (x, y) { return x * y; }, a, b);
+        },
+        dividePoint: function (a, b) {
+            return this.newPointOp(function (x, y) { return x / y; }, a, b);
+        },
+        subtractPoint: function (a, b) {
+            return this.newPointOp(function (x, y) { return x - y; }, a, b);
+        },
+        addPoint: function (a, b) {
+            return this.newPointOp(function (x, y) { return x + y; }, a, b);
+        },
+        newPointOp: function (fn, a, b) {
+            return new paper.Point(
+                fn(this.get(a, "x"), this.get(b, "x")),
+                fn(this.get(a, "y"), this.get(b, "y"))
+            );
+        },
+        multiplySegment: function (a, b) {
+            var self = this;
+            return this.newSegmentOp(function (x, y) { return self.multiplyPoint(x, y); }, a, b);
+        },
+        divideSegment: function (a, b) {
+            var self = this;
+            return this.newSegmentOp(function (x, y) { return self.dividePoint(x, y); }, a, b);
+        },
+        subtractSegment: function (a, b) {
+            var self = this;
+            return this.newSegmentOp(function (x, y) { return self.subtractPoint(x, y); }, a, b);
+        },
+        addSegment: function (a, b) {
+            var self = this;
+            return this.newSegmentOp(function (x, y) { return self.addPoint(x, y); }, a, b);
+        },
+        newSegmentOp: function (fn, a, b) {
+            return new paper.Segment(
+                fn(this.get(a, "point"), this.get(b, "point")),
+                fn(this.get(a, "handleIn"), this.get(b, "handleIn")),
+                fn(this.get(a, "handleOut"), this.get(b, "handleOut"))
+            );
+        },
+        interpolateSegment: function (x1, x2, y1, y2, x) {
+            // y = ((x-x1)(y2-y1)/(x2-x1))+y1 (x: seconds, y: segments)
+            var x_x1 = x - x1,
+                y2_y1 = this.subtractSegment(y2, y1),
+                x2_x1 = x2 - x1,
+                x_x1_times_y2_y1 = this.multiplySegment(x_x1, y2_y1),
+                x_x1_times_y2_y1_dividedBy_x2_x1 = this.divideSegment(x_x1_times_y2_y1, x2_x1);
+            return this.addSegment(x_x1_times_y2_y1_dividedBy_x2_x1, y1);
+        },
+        get: function (val, prop) { return val[prop] !== undefined ? val[prop] : val; }
+    }
+})();

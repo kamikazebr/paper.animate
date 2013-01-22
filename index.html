@@ -9,16 +9,18 @@
 			shape.fillColor = '#e9e9ff';
 			shape.selected = true;
 			var anim = shape.animate(1)
-							.translate(new Point(200,50))
-							.rotate(60);
-							//.shear(0.6,0.8)
-							   
+							.shear(0.1,0.2)
+							.translate(new Point(200,100))
+							.rotate(60)
+							.scale(2);
+
 			var dupe = new Path.RegularPolygon(new Point(180, 170), 4, 100);
 			dupe.fillColor = '#e9e9ff';
 			dupe.selected = true;
-			dupe.translate(new Point(500,50));
+			dupe.shear(0.1,0.2);
+			dupe.translate(new Point(700,100));
 			dupe.rotate(60);
-			//dupe.shear(0.6,0.8);
+			dupe.scale(2);
 			
 			function onFrame(e) { anim.update(e); }
 		</script>
