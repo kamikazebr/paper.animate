@@ -1,4 +1,4 @@
-// paper.animate.js v0.0.2
+// paper.animate.js v0.1.0
 
 paper.Item.prototype.animate = function(duration, chain) {
 	return new PaperAnimate.AnimationProxy(duration, chain||true, this);
@@ -35,28 +35,28 @@ PaperAnimate.AnimationProxy = (function() {
 		PaperAnimate.utils.selectOverload(
 			this, arguments,
 			[{
-				params: ["Number","Point","Number"],
-				fn: function(scale, center, _duration) {
-					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(scale, scale, center, _duration || duration, this));
+				params: ["Number","Point"],
+				fn: function(scale, center) {
+					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(scale, scale, center, duration, this));
 				}
 			},
 			{
-				params: ["Number","Number","Point","Number"],
-				fn: function(hor, ver, center, _duration) {
-					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(hor, ver, center, _duration || duration, this));
+				params: ["Number","Number","Point"],
+				fn: function(hor, ver, center) {
+					this.modifiers.push(new PaperAnimate.modifiers.ScaleModifier(hor, ver, center, duration, this));
 				}
 			}]
 		);
 		return retVal;
 	};
 	
-	AnimationProxy.prototype.translate = function(point, _duration) {
-		this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, _duration || duration, this));
+	AnimationProxy.prototype.translate = function(point) {
+		this.modifiers.push(new PaperAnimate.modifiers.TranslateModifier(point, duration, this));
 		return retVal;
 	};
 	
-	AnimationProxy.prototype.rotate = function(angle, center, _duration) {
-		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, _duration || duration, this));
+	AnimationProxy.prototype.rotate = function(angle, center) {
+		this.modifiers.push(new PaperAnimate.modifiers.RotateModifier(angle, center, duration, this));
 		return retVal;
 	};
 	
@@ -64,15 +64,15 @@ PaperAnimate.AnimationProxy = (function() {
 		PaperAnimate.utils.selectOverload(
 			this, arguments,
 			[{
-				params: ["Point","Point","Number"],
-				fn: function(point, center, _duration) {
-					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({point:point}, center, _duration || duration, this));
+				params: ["Point","Point"],
+				fn: function(point, center) {
+					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({point:point}, center, duration, this));
 				}
 			},
 			{
-				params: ["Number","Number","Point","Number"],
-				fn: function(hor, ver, center, _duration) {
-					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({hor:hor,ver:ver}, center, _duration || duration, this));
+				params: ["Number","Number","Point"],
+				fn: function(hor, ver, center) {
+					this.modifiers.push(new PaperAnimate.modifiers.ShearModifier({hor:hor,ver:ver}, center, duration, this));
 				}
 			}]
 		);
