@@ -1,10 +1,36 @@
 // paper.animate.js v0.1.1
 
-paper.Item.prototype.animate = function (duration, chain) {
-    return new PaperAnimate.AnimationProxy(duration, chain || true, this);
+paper.Item.prototype.animate = function (duration, updater, chain) {
+    if (arguments.length === 2) {
+        if (updater.IsUpdater !== true) {
+            chain = updater;
+            updater = undefined;
+        }
+    }
+    var proxy = new PaperAnimate.AnimationProxy(duration, chain || false, this);
+    if (updater !== null) updater.animations.push(proxy);
+    return proxy;
 };
 
 var PaperAnimate = {};
+
+PaperAnimate.Updater = (function () {
+
+    function Updater() {
+        this.IsUpdater = true;
+        this.animations = [];
+    }
+
+    Updater.prototype.update = function (e) {
+        for (var i = 0; i < this.animations.length; i++) {
+            if (this.animations[i].update(e) === false) {
+                // remove
+            }
+        }
+    }
+
+    return Updater;
+})();
 
 // Animation Proxy
 
@@ -22,7 +48,7 @@ PaperAnimate.AnimationProxy = (function () {
         if (this.duration <= 0) {
             this.modifiers.length = 0;
             delete this.targetShape;
-            return;
+            return false;
         }
         for (var i = 0; i < this.modifiers.length; i++) {
             this.modifiers[i].update(e);
