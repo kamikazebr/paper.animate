@@ -1,4 +1,4 @@
-// paper.animate.js v0.0.1
+// paper.animate.js v0.0.2
 
 paper.Item.prototype.animate = function(duration, chain) {
 	return new PaperAnimate.AnimationProxy(duration, chain||true, this);
@@ -174,37 +174,40 @@ PaperAnimate.modifiers.ShearModifier = (function() {
 
 // Utils
 
-PaperAnimate.utils = {
-	subtractPoint: function(a, b) {
-		return PaperAnimate.utils.newPointOp(function(x,y) { return x - y; }, a, b);
-	},
-	multiplyPoint: function(a, b) {
-		return PaperAnimate.utils.newPointOp(function(x,y) { return x * y; }, a, b);
-	},
-	newPointOp: function(fn, a, b) {
-		return new paper.Point(
-			fn(PaperAnimate.utils.getX(a), PaperAnimate.utils.getX(b)),
-			fn(PaperAnimate.utils.getY(a), PaperAnimate.utils.getY(b))
-		);
-	},
-	getX: function(val) { return val.x !== undefined ? val.x : val; },
-	getY: function(val) { return val.y !== undefined ? val.y : val; },
-	selectOverload: function(that, args, overloads) {
-		var types = {
-			Number: function(val) { return !isNaN(parseFloat(val)) && isFinite(val); },
-			Point: function(val) { return val.x !== undefined && val.y !== undefined; }
-		};
-		for (var o = 0; o < overloads.length; o++) {
-			var overload = overloads[o],
-				matches = true;
-			if (args.length > overloads[o].params.length) continue;
-			for (var a = 0; a < args.length; a++) {
-				if (!types[overload.params[a]](args[a])) {
-					matches = false;
-					break;
-				};
+PaperAnimate.utils = (function() {
+	return {
+		subtractPoint: function(a, b) {
+			return this.newPointOp(function(x,y) { return x - y; }, a, b);
+		},
+		multiplyPoint: function(a, b) {
+			return this.newPointOp(function(x,y) { return x * y; }, a, b);
+		},
+		newPointOp: function(fn, a, b) {
+			return new paper.Point(
+				fn(this.getX(a), this.getX(b)),
+				fn(this.getY(a), this.getY(b))
+			);
+		},
+		getX: function(val) { return this.get(val, "x"); },
+		getY: function(val) { return this.get(val, "y"); },
+		get: function(val, prop) { return val[prop] !== undefined ? val[prop] : val; },
+		selectOverload: function(that, args, overloads) {
+			var types = {
+				Number: function(val) { return !isNaN(parseFloat(val)) && isFinite(val); },
+				Point: function(val) { return val.x !== undefined && val.y !== undefined; }
+			};
+			for (var o = 0; o < overloads.length; o++) {
+				var overload = overloads[o],
+					matches = true;
+				if (args.length > overloads[o].params.length) continue;
+				for (var a = 0; a < args.length; a++) {
+					if (!types[overload.params[a]](args[a])) {
+						matches = false;
+						break;
+					};
+				}
+				if (matches) { return overload.fn.apply(that, args); }
 			}
-			if (matches) { return overload.fn.apply(that, args); }
 		}
 	}
-};
+})();;
