@@ -1,4 +1,4 @@
-// paper.animate.js v0.1.2
+// paper.animate.js v0.1.3
 
 paper.Item.prototype.animate = function (duration, updater, chain) {
     if (arguments.length === 2) {
@@ -108,8 +108,8 @@ PaperAnimate.AnimationProxy = (function () {
         return retVal;
     };
 
-    AnimationProxy.prototype.replaceShape = function (shape) {
-        if (shape.segments.length !== this.item.segments.length) return;
+    AnimationProxy.prototype.replaceShape = function (newShape) {
+        if (newShape.segments.length !== this.item.segments.length) return;
         this.targetShape = newShape.clone();
         newShape.remove();
         return retVal;
