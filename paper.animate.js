@@ -1,4 +1,4 @@
-// paper.animate.js v0.1.3
+// paper.animate.js v0.1.4
 
 paper.Item.prototype.animate = function (duration, updater, chain) {
     if (arguments.length === 2) {
@@ -22,11 +22,15 @@ PaperAnimate.Updater = (function () {
     }
 
     Updater.prototype.update = function (e) {
+		var toRemove = [];
         for (var i = 0; i < this.animations.length; i++) {
             if (this.animations[i].update(e) === false) {
-                // remove
+                toRemove.push(this.animations[i]);
             }
         }
+		for (var j = 0; j < toRemove.length; j++) {
+			this.animations.splice(this.animations.indexOf(toRemove[j]), 1);
+		}
     }
 
     return Updater;
