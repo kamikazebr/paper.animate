@@ -1,4 +1,4 @@
-// paper.animate.js v0.1.5
+// paper.animate.js v0.1.6
 
 paper.Item.prototype.animate = function (duration, updater, chain) {
     if (arguments.length === 2) {
@@ -22,16 +22,16 @@ PaperAnimate.Updater = (function () {
     }
 
     Updater.prototype.update = function (e) {
-		var toRemove = [];
-        for (var i = 0; i < this.animations.length; i++) {
-            if (this.animations[i].update(e) === false) {
-                toRemove.push(this.animations[i]);
+        var toRemove = [];
+            for (var i = 0; i < this.animations.length; i++) {
+                if (this.animations[i].update(e) === false) {
+                    toRemove.push(this.animations[i]);
+                }
             }
+        for (var j = 0; j < toRemove.length; j++) {
+          this.animations.splice(this.animations.indexOf(toRemove[j]), 1);
         }
-		for (var j = 0; j < toRemove.length; j++) {
-			this.animations.splice(this.animations.indexOf(toRemove[j]), 1);
-		}
-    }
+    };
 
     return Updater;
 })();
@@ -57,6 +57,8 @@ PaperAnimate.AnimationProxy = (function () {
         for (var i = 0; i < this.modifiers.length; i++) {
             this.modifiers[i].update(e);
         }
+        var deltaOverrun = e.delta - this.duration;
+        if (deltaOverrun > 0) e.delta -= deltaOverrun;
         if (this.targetShape !== undefined) {
             for (var j = 0; j < this.item.segments.length; j++) {
                 this.item.segments[j] = PaperAnimate.utils.interpolateSegment(0, this.duration, this.item.segments[j], this.targetShape.segments[j], e.delta);
@@ -76,7 +78,7 @@ PaperAnimate.AnimationProxy = (function () {
         this.targetShape = this.item.clone();
         this.targetShape.fullySelected = false;
         this.targetShape.visible = false;
-    }
+    };
 
     AnimationProxy.prototype.scale = function () {
         if (this.targetShape === undefined) { this.initTargetShape(); }
@@ -212,12 +214,11 @@ PaperAnimate.utils = (function () {
         },
         interpolateSegment: function (x1, x2, y1, y2, x) {
             // y = ((x-x1)(y2-y1)/(x2-x1))+y1 (x: seconds, y: segments)
-            var x_x1 = x - x1,
-                y2_y1 = this.subtractSegment(y2, y1),
-                x2_x1 = x2 - x1,
-                x_x1_times_y2_y1 = this.multiplySegment(x_x1, y2_y1),
-                x_x1_times_y2_y1_dividedBy_x2_x1 = this.divideSegment(x_x1_times_y2_y1, x2_x1);
-            return this.addSegment(x_x1_times_y2_y1_dividedBy_x2_x1, y1);
+            return this.addSegment(
+            this.divideSegment(
+                    this.multiplySegment(x - x1, this.subtractSegment(y2, y1)),
+                    x2 - x1),
+                y1);
         },
         get: function (val, prop) { return val[prop] !== undefined ? val[prop] : val; }
     }
